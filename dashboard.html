@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <!-- Metadados -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Números Denunciados</title>
+    <!-- Estilos -->
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            width: 80%;
+            max-width: 1200px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #4CAF50;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #333;
+            color: white;
+        }
+        td {
+            background-color: #2e2e2e;
+        }
+        a {
+            color: #4CAF50;
+            text-decoration: none;
+            margin-top: 20px;
+            display: inline-block;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Números Denunciados</h1>
+
+        <!-- Caixa de filtro -->
+        <input type="text" id="filterInput" placeholder="Filtrar por número ou motivo" onkeyup="filterTable()">
+
+        <!-- Tabela de Números Denunciados -->
+        <table id="denunciaTable">
+            <thead>
+                <tr>
+                    <th>Número</th>
+                    <th>Motivo da Denúncia</th>
+                </tr>
+            </thead>
+            <tbody id="denunciaTableBody">
+                <!-- Os dados serão inseridos aqui via JavaScript -->
+            </tbody>
+        </table>
+
+        <a href="index.html">Voltar para a página inicial</a>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Função para carregar os dados do back-end
+        function loadTableData() {
+            fetch('http://localhost:8000/telefones')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao obter os dados');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const tbody = document.getElementById('denunciaTableBody');
+                    tbody.innerHTML = ''; // Limpa as linhas existentes
+
+                    if (data.length === 0) {
+                        const tr = document.createElement('tr');
+                        const td = document.createElement('td');
+                        td.colSpan = 2;
+                        td.style.textAlign = 'center';
+                        td.textContent = 'Nenhum número denunciado encontrado.';
+                        tr.appendChild(td);
+                        tbody.appendChild(tr);
+                    } else {
+                        data.forEach(item => {
+                            const tr = document.createElement('tr');
+
+                            const tdNumero = document.createElement('td');
+                            tdNumero.textContent = item.numero;
+                            tr.appendChild(tdNumero);
+
+                            const tdMotivo = document.createElement('td');
+                            tdMotivo.textContent = item.tipo_denuncia;
+                            tr.appendChild(tdMotivo);
+
+                            tbody.appendChild(tr);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao carregar os números denunciados.');
+                });
+        }
+
+        // Chama a função ao carregar a página
+        window.onload = loadTableData;
+
+        // Função de filtro
+        function filterTable() {
+            const input = document.getElementById('filterInput');
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById('denunciaTable');
+            const tr = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < tr.length; i++) {
+                let tdNumber = tr[i].getElementsByTagName('td')[0]; // Coluna Número
+                let tdReason = tr[i].getElementsByTagName('td')[1]; // Coluna Motivo
+                if (tdNumber || tdReason) {
+                    const numberText = tdNumber.textContent || tdNumber.innerText;
+                    const reasonText = tdReason.textContent || tdReason.innerText;
+                    if (numberText.toLowerCase().indexOf(filter) > -1 || reasonText.toLowerCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>
+
